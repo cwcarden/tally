@@ -8,7 +8,10 @@ defmodule TallyWeb.Layouts do
 
   attr :flash, :map, required: true
   attr :current_scope, :map, default: nil
-  slot :inner_block, required: true
+  # When used as a LiveView layout, Phoenix passes rendered content as @inner_content.
+  # When used as a slot-based component in controller templates, @inner_block is used.
+  attr :inner_content, :any, default: nil
+  slot :inner_block
 
   def app(assigns) do
     ~H"""
@@ -34,7 +37,7 @@ defmodule TallyWeb.Layouts do
         </div>
 
         <main class="flex-1 p-4 md:p-6 lg:p-8">
-          {render_slot(@inner_block)}
+          {if @inner_content != nil, do: @inner_content, else: render_slot(@inner_block)}
         </main>
       </div>
 

@@ -32,8 +32,13 @@ function updateSidebarClass() {
   const drawer = document.getElementById("main-drawer")
   const toggle = document.getElementById("drawer-toggle")
   if (!drawer || !toggle) return
-  // On desktop (lg+), use pushed layout; on mobile, use overlay
-  if (toggle.checked && window.innerWidth >= 1024) {
+  // Use localStorage as the source of truth. LiveView DOM morphing can reset
+  // the checkbox to unchecked (server renders it without the checked attr),
+  // so we always restore both the checkbox state and the drawer class here.
+  const saved = localStorage.getItem(SIDEBAR_KEY)
+  const wantOpen = saved !== null ? saved === "open" : window.innerWidth >= 1024
+  toggle.checked = wantOpen
+  if (wantOpen && window.innerWidth >= 1024) {
     drawer.classList.add("drawer-open")
   } else {
     drawer.classList.remove("drawer-open")
@@ -44,10 +49,7 @@ function initSidebar() {
   const toggle = document.getElementById("drawer-toggle")
   if (!toggle) return
 
-  // Restore persisted state; default open on desktop, closed on mobile
-  const saved = localStorage.getItem(SIDEBAR_KEY)
-  toggle.checked = saved !== null ? saved === "open" : window.innerWidth >= 1024
-
+  // Set initial state from localStorage (or default based on viewport width)
   updateSidebarClass()
 
   // Avoid duplicate listeners across LiveView navigations
@@ -79,6 +81,12 @@ window.addEventListener("phx:page-loading-stop", _info => {
   topbar.hide()
   initSidebar()
 })
+
+// Re-apply drawer-open after every LiveView DOM patch.
+// LiveView morphs the DOM back to the server-rendered class list
+// (removing any JS-added classes like drawer-open), so we need to
+// restore the correct state after each patch — not just on navigation.
+document.addEventListener("phx:update", updateSidebarClass)
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

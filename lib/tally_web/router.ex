@@ -28,24 +28,27 @@ defmodule TallyWeb.Router do
   scope "/", TallyWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live "/dashboard", DashboardLive, :index
+    live_session :require_authenticated_user,
+      on_mount: [{TallyWeb.UserAuth, :require_authenticated}] do
+      live "/dashboard", DashboardLive, :index
 
-    # Livestock
-    live "/livestock", Livestock.AnimalListLive, :index
-    live "/livestock/:id", Livestock.AnimalDetailLive, :index
-    live "/livestock/:id/edit", Livestock.AnimalFormLive, :edit
+      # Livestock
+      live "/livestock", Livestock.AnimalListLive, :index
+      live "/livestock/:id", Livestock.AnimalDetailLive, :index
+      live "/livestock/:id/edit", Livestock.AnimalFormLive, :edit
 
-    # Finance
-    live "/finance", Finance.DashboardLive, :index
-    live "/finance/expenses", Finance.ExpensesLive, :index
-    live "/finance/income", Finance.IncomeLive, :index
-    live "/finance/vendors", Finance.VendorsLive, :index
-    live "/finance/attachments", Finance.AttachmentsLive, :index
+      # Finance
+      live "/finance", Finance.DashboardLive, :index
+      live "/finance/expenses", Finance.ExpensesLive, :index
+      live "/finance/income", Finance.IncomeLive, :index
+      live "/finance/vendors", Finance.VendorsLive, :index
+      live "/finance/attachments", Finance.AttachmentsLive, :index
 
-    # Settings
-    live "/settings/breeds", Settings.BreedsLive, :index
-    live "/settings/event-types", Settings.EventTypesLive, :index
-    live "/settings/categories", Settings.CategoriesLive, :index
+      # Settings
+      live "/settings/breeds", Settings.BreedsLive, :index
+      live "/settings/event-types", Settings.EventTypesLive, :index
+      live "/settings/categories", Settings.CategoriesLive, :index
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

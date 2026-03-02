@@ -18,8 +18,12 @@
           if (!m || m === "system") {
             m = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
           }
+          // Neutral school: just "light" or "dark"
           if (!school || school === "neutral") return m;
-          return `${school}-${m}`;
+          // School themes: dark variant has "-dark" suffix, light variant has no suffix
+          // e.g. "aggie" (light) and "aggie-dark" — there is no "aggie-light"
+          if (m === "dark") return `${school}-dark`;
+          return school;
         };
 
         const applyTheme = () => {

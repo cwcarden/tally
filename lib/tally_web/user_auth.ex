@@ -3,9 +3,39 @@ defmodule TallyWeb.UserAuth do
 
   import Plug.Conn
   import Phoenix.Controller
+  import Phoenix.Component, only: [assign_new: 3]
 
   alias Tally.Accounts
   alias Tally.Accounts.Scope
+
+  @doc """
+  Handles mounting and authenticating the current_scope in LiveViews.
+
+  ## `:require_authenticated`
+
+  Authenticates the user and assigns current_scope to socket. Halts
+  and redirects to login if the user is not authenticated.
+  """
+  def on_mount(:require_authenticated, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    if socket.assigns.current_scope && socket.assigns.current_scope.user do
+      {:cont, socket}
+    else
+      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/users/log-in")}
+    end
+  end
+
+  defp mount_current_scope(socket, session) do
+    case session["user_token"] &&
+           Accounts.get_user_by_session_token(session["user_token"]) do
+      {user, _token_inserted_at} ->
+        assign_new(socket, :current_scope, fn -> Scope.for_user(user) end)
+
+      nil ->
+        assign_new(socket, :current_scope, fn -> Scope.for_user(nil) end)
+    end
+  end
 
   # Make the remember me cookie valid for 14 days. This should match
   # the session validity setting in UserToken.
