@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <.live_title default="Tally" suffix=" · Tally Ranch">
+      {assigns[:page_title]}
+    </.live_title>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+    <script>
+      (() => {
+        // Theme system: school (neutral | red-raider | aggie) × mode (system | light | dark)
+        const computeTheme = (school, mode) => {
+          let m = mode;
+          if (!m || m === "system") {
+            m = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          if (!school || school === "neutral") return m;
+          return `${school}-${m}`;
+        };
+
+        const applyTheme = () => {
+          const school = localStorage.getItem("phx:school") || "neutral";
+          const mode   = localStorage.getItem("phx:mode")   || "system";
+          const theme  = computeTheme(school, mode);
+
+          // Resolve actual mode for data-mode attribute (for CSS active indicators)
+          const resolvedMode = (!mode || mode === "system")
+            ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+            : mode;
+
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.setAttribute("data-school", school);
+          document.documentElement.setAttribute("data-mode", resolvedMode);
+        };
+
+        applyTheme();
+
+        // Re-apply when OS color scheme changes (for "system" mode)
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+
+        // Sync across tabs
+        window.addEventListener("storage", (e) => {
+          if (e.key === "phx:school" || e.key === "phx:mode") applyTheme();
+        });
+
+        // School picker dispatches this event
+        window.addEventListener("phx:set-school", (e) => {
+          const school = e.target.dataset.phxSchool;
+          if (school === "neutral") {
+            localStorage.removeItem("phx:school");
+          } else {
+            localStorage.setItem("phx:school", school);
+          }
+          applyTheme();
+        });
+
+        // Mode picker dispatches this event
+        window.addEventListener("phx:set-mode", (e) => {
+          const mode = e.target.dataset.phxMode;
+          if (mode === "system") {
+            localStorage.removeItem("phx:mode");
+          } else {
+            localStorage.setItem("phx:mode", mode);
+          }
+          applyTheme();
+        });
+      })();
+    </script>
+  </head>
+  <body class="bg-base-200 min-h-screen">
+    {@inner_content}
+  </body>
+</html>

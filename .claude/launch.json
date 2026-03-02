@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tally",
+      "runtimeExecutable": "mix",
+      "runtimeArgs": ["phx.server"],
+      "cwd": "/Users/charles/dev/tally",
+      "port": 4000
+    }
+  ]
+}
